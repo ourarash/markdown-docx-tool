@@ -75,6 +75,16 @@ jobs:
             --skill-doc .\skills\markdown-to-docx\SKILL.md `
             --callout-doc .\skills\markdown-to-docx\references\callout-styles.md
 
+      - name: Print PowerShell wrapper diagnostics
+        shell: powershell
+        run: |
+          $scriptPath = ".\scripts\pandoc_md_to_docx.ps1"
+          Write-Host "GITHUB_SHA: $env:GITHUB_SHA"
+          Write-Host "Checked-out HEAD: $(git rev-parse HEAD)"
+          Write-Host "Wrapper exposes MetadataFile: $(Select-String -Path $scriptPath -Pattern '\[string\]\$MetadataFile' -Quiet)"
+          Write-Host "Wrapper header:"
+          Get-Content $scriptPath | Select-Object -First 20
+
       - name: Run PowerShell wrapper smoke test
         shell: powershell
         run: |

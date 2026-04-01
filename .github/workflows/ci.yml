@@ -5,8 +5,14 @@ on:
   pull_request:
 
 jobs:
-  linux-smoke:
-    runs-on: ubuntu-latest
+  unix-smoke:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -16,9 +22,14 @@ jobs:
           python-version: "3.11"
 
       - name: Install conversion dependencies
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y pandoc perl zip unzip
+
+      - name: Install Pandoc
+        if: matrix.os == 'macos-latest'
+        run: brew install pandoc
 
       - name: Validate reference template styles
         run: |

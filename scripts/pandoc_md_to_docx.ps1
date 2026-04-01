@@ -29,34 +29,35 @@ if (-not (Test-Path -LiteralPath $ResolvedTarget)) {
   throw "Compatibility wrapper target not found: $ResolvedTarget"
 }
 
-$ForwardArgs = @()
+$ForwardParams = @{}
 
 if ($Help.IsPresent) {
-  $ForwardArgs += "-h"
+  & $ResolvedTarget "-h"
+  exit $LASTEXITCODE
 }
 
 if ($PSBoundParameters.ContainsKey("InputPath")) {
-  $ForwardArgs += @("-InputPath", $InputPath)
+  $ForwardParams["InputPath"] = $InputPath
 }
 
 if ($PSBoundParameters.ContainsKey("OutputPath")) {
-  $ForwardArgs += @("-OutputPath", $OutputPath)
+  $ForwardParams["OutputPath"] = $OutputPath
 }
 
 if ($PSBoundParameters.ContainsKey("ReferenceDoc")) {
-  $ForwardArgs += @("-ReferenceDoc", $ReferenceDoc)
+  $ForwardParams["ReferenceDoc"] = $ReferenceDoc
 }
 
 if ($PSBoundParameters.ContainsKey("MetadataFile")) {
-  $ForwardArgs += @("-MetadataFile", $MetadataFile)
+  $ForwardParams["MetadataFile"] = $MetadataFile
 }
 
 if ($PSBoundParameters.ContainsKey("OutputDir")) {
-  $ForwardArgs += @("-OutputDir", $OutputDir)
+  $ForwardParams["OutputDir"] = $OutputDir
 }
 
 if ($TableOfContents.IsPresent) {
-  $ForwardArgs += "-TableOfContents"
+  $ForwardParams["TableOfContents"] = $true
 }
 
-& $ResolvedTarget @ForwardArgs
+& $ResolvedTarget @ForwardParams

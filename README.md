@@ -95,13 +95,6 @@ The sample files under `samples/` are good starting points for testing template 
 - `samples/showcase.md` covers headings, lists, tables, code blocks, footnotes, and callout styles
 - `samples/meeting-notes.md` is a smaller notes-style example
 
-## Troubleshooting
-
-- If `pandoc` is not found, install it and reopen your terminal.
-- If the macOS/Linux shell script reports a missing command, install the missing tool and rerun.
-- If PowerShell blocks script execution, run `Set-ExecutionPolicy -Scope Process Bypass` in that terminal window.
-- If a Markdown file references images, keep the image paths relative to the Markdown file or use absolute paths.
-
 ## Development Checks
 
 Validate the bundled Word template styles:

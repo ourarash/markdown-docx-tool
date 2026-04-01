@@ -88,16 +88,20 @@ jobs:
       - name: Run PowerShell wrapper smoke test
         shell: powershell
         run: |
+          $metadataPath = Join-Path $env:TEMP "metadata.yaml"
+          $outputDir = Join-Path $env:TEMP "wrapper-output"
           @"
           title: Windows CI Markdown to DOCX
           reviewer: GitHub Actions
-          "@ | Set-Content -Encoding utf8 $env:TEMP\metadata.yaml
-          .\scripts\pandoc_md_to_docx.ps1 `
-            -InputPath .\samples\meeting-notes.md `
-            -MetadataFile $env:TEMP\metadata.yaml `
-            -OutputDir $env:TEMP\wrapper-output `
-            -TableOfContents
-          if (-not (Test-Path $env:TEMP\wrapper-output\meeting-notes.docx)) {
+          "@ | Set-Content -Encoding utf8 $metadataPath
+          $wrapperArgs = @{
+            InputPath = ".\samples\meeting-notes.md"
+            MetadataFile = $metadataPath
+            OutputDir = $outputDir
+            TableOfContents = $true
+          }
+          & .\scripts\pandoc_md_to_docx.ps1 @wrapperArgs
+          if (-not (Test-Path (Join-Path $outputDir "meeting-notes.docx"))) {
             throw "PowerShell wrapper did not produce meeting-notes.docx"
           }
 

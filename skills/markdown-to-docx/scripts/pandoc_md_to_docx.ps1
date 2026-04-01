@@ -102,10 +102,14 @@ function AutoFit-DocxTables {
   param([string]$DocxPath)
 
   $TempDir = Get-TemporaryDirectory
-  $ZipPath = Join-Path ([System.IO.Path]::GetTempPath()) ("{0}.zip" -f [System.Guid]::NewGuid())
+  $SourceZipPath = Join-Path ([System.IO.Path]::GetTempPath()) ("{0}-source.zip" -f [System.Guid]::NewGuid())
+  $OutputZipPath = Join-Path ([System.IO.Path]::GetTempPath()) ("{0}-output.zip" -f [System.Guid]::NewGuid())
 
   try {
-    Expand-Archive -LiteralPath $DocxPath -DestinationPath $TempDir -Force
+    # PowerShell's Expand-Archive only accepts .zip paths, even though .docx
+    # files are ZIP containers internally.
+    Copy-Item -LiteralPath $DocxPath -Destination $SourceZipPath -Force
+    Expand-Archive -LiteralPath $SourceZipPath -DestinationPath $TempDir -Force
 
     $DocumentXml = Join-Path $TempDir "word/document.xml"
     $Content = [System.IO.File]::ReadAllText($DocumentXml)
@@ -113,20 +117,24 @@ function AutoFit-DocxTables {
     $Content = $Content.Replace('<w:tblW w:type="pct" w:w="5000"/>', '<w:tblW w:type="auto" w:w="0"/>')
     [System.IO.File]::WriteAllText($DocumentXml, $Content)
 
-    if (Test-Path -LiteralPath $ZipPath) {
-      Remove-Item -LiteralPath $ZipPath -Force
+    if (Test-Path -LiteralPath $OutputZipPath) {
+      Remove-Item -LiteralPath $OutputZipPath -Force
     }
 
-    Compress-Archive -Path (Join-Path $TempDir '*') -DestinationPath $ZipPath -Force
-    Move-Item -LiteralPath $ZipPath -Destination $DocxPath -Force
+    Compress-Archive -Path (Join-Path $TempDir '*') -DestinationPath $OutputZipPath -Force
+    Copy-Item -LiteralPath $OutputZipPath -Destination $DocxPath -Force
   }
   finally {
     if (Test-Path -LiteralPath $TempDir) {
       Remove-Item -LiteralPath $TempDir -Recurse -Force
     }
 
-    if (Test-Path -LiteralPath $ZipPath) {
-      Remove-Item -LiteralPath $ZipPath -Force
+    if (Test-Path -LiteralPath $SourceZipPath) {
+      Remove-Item -LiteralPath $SourceZipPath -Force
+    }
+
+    if (Test-Path -LiteralPath $OutputZipPath) {
+      Remove-Item -LiteralPath $OutputZipPath -Force
     }
   }
 }

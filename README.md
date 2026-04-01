@@ -1,5 +1,8 @@
 # Markdown to DOCX
 
+[![CI](https://github.com/ourarash/markdown-docx-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/ourarash/markdown-docx-tool/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ourarash/markdown-docx-tool/blob/main/LICENSE)
+
 `markdown-to-docx` is a small wrapper repo around Pandoc for turning Markdown files into Microsoft Word documents.
 
 It does not replace Pandoc. Instead, it packages a reusable Word style template, cross-platform helper scripts, and one small post-processing fix for Word table layout.

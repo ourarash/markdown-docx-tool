@@ -24,7 +24,7 @@ This sample demonstrates the kinds of Markdown features that convert cleanly int
 1. Write the Markdown draft.
 2. Convert it to DOCX.
 3. Review the generated document in Word.
-4. Adjust `scripts/reference.docx` if you want different styling.
+4. Adjust `skills/markdown-to-docx/scripts/reference.docx` if you want different styling.
 
 ## Quote
 
@@ -34,7 +34,7 @@ This sample demonstrates the kinds of Markdown features that convert cleanly int
 
 ::: {custom-style="Note"}
 **Note:** This showcase includes a few callout blocks that use Pandoc's `custom-style` attribute.
-Define matching styles in `scripts/reference.docx` if you want them to stand out visually in Word.
+Define matching styles in `skills/markdown-to-docx/scripts/reference.docx` if you want them to stand out visually in Word.
 Without those styles, the content still converts, but the callout may look like normal body text.
 :::
 
@@ -66,7 +66,7 @@ Treat the generated DOCX as reliable output, not as something you should never p
 
 ::: {custom-style="Risk"}
 **Risk:** A custom callout style that exists only on one person's machine can create confusing results for everyone else.
-Store the shared look in `scripts/reference.docx` so the repo stays the single source of truth.
+Store the shared look in `skills/markdown-to-docx/scripts/reference.docx` so the repo stays the single source of truth.
 That reduces drift between drafts and avoids last-minute formatting cleanup.
 :::
 

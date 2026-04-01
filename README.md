@@ -22,12 +22,43 @@ Windows:
 
 This writes `samples/showcase.docx`.
 
+## Use As A Codex Skill
+
+This repo now also ships a self-contained Codex skill at `skills/markdown-to-docx`.
+
+What the skill helps with:
+
+- converting local Markdown files to DOCX with the bundled scripts
+- customizing the bundled Word reference template
+- fixing or expanding `custom-style` callout support for Word output
+
+Install it from GitHub with the skill-installer helper:
+
+```bash
+python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --repo ourarash/markdown-docx-tool --path skills/markdown-to-docx
+```
+
+Restart Codex after installation so the new skill is loaded.
+
+Example prompts for Codex:
+
+- `Convert ./notes.md to a Word document using the markdown-to-docx skill.`
+- `Make a DOCX version of ./docs/report.md and put it in ./output/report.docx.`
+- `Update the markdown-to-docx template so Note and Warning callouts stand out more in Word.`
+- `Add a new custom-style callout to the markdown-to-docx reference.docx template.`
+
+Local dependencies still required:
+
+- `pandoc` on every platform
+- `perl`, `zip`, and `unzip` on macOS/Linux
+
 ## What This Adds
 
-- `📝` a reusable Word reference template in `scripts/reference.docx`
+- `📝` a reusable Word reference template in `skills/markdown-to-docx/scripts/reference.docx`
 - `🖥️` helper scripts for macOS/Linux and Windows
 - `📎` predictable handling for relative input paths and linked assets
 - `📊` one DOCX XML fix so wide tables auto-fit better in Word
+- `🧠` a GitHub-installable Codex skill in `skills/markdown-to-docx`
 
 If you already prefer running Pandoc directly and do not need these defaults, you may not need this repo.
 
@@ -35,22 +66,29 @@ If you already prefer running Pandoc directly and do not need these defaults, yo
 
 It ships with:
 
-- a macOS/Linux shell script: `scripts/pandoc_md_to_docx.sh`
-- a Windows PowerShell script: `scripts/pandoc_md_to_docx.ps1`
-- a Word reference template: `scripts/reference.docx`
+- a self-contained Codex skill: `skills/markdown-to-docx/`
+- repo-root compatibility wrappers: `scripts/pandoc_md_to_docx.sh` and `scripts/pandoc_md_to_docx.ps1`
+- a bundled Word reference template: `skills/markdown-to-docx/scripts/reference.docx`
 - sample Markdown files under `samples/`
 
-The conversion flow stays intentionally close to Pandoc and keeps one post-processing step that switches Word tables from fixed layout to auto-fit, which helps wide Markdown tables render more naturally.
+The conversion flow stays intentionally close to Pandoc and keeps one post-processing step that switches Word tables from fixed layout to auto-fit, which helps wide Markdown tables render more naturally. The repo-root scripts are compatibility wrappers that delegate into the skill-local implementation.
 
 ## Repo Layout
 
 ```text
 markdown-to-docx/
 ├── README.md
+├── skills/
+│   └── markdown-to-docx/
+│       ├── SKILL.md
+│       ├── references/
+│       └── scripts/
+│           ├── pandoc_md_to_docx.ps1
+│           ├── pandoc_md_to_docx.sh
+│           └── reference.docx
 ├── scripts/
 │   ├── pandoc_md_to_docx.ps1
 │   ├── pandoc_md_to_docx.sh
-│   └── reference.docx
 └── samples/
     ├── meeting-notes.md
     └── showcase.md
@@ -79,6 +117,7 @@ markdown-to-docx/
 
    ```bash
    chmod +x scripts/pandoc_md_to_docx.sh
+   chmod +x skills/markdown-to-docx/scripts/pandoc_md_to_docx.sh
    ```
 
 4. Run a sample conversion from the repo root.
@@ -150,12 +189,12 @@ Behavior:
 - The input file can be absolute, repo-relative, or relative to your current working directory.
 - If you do not pass an output path, the script writes a `.docx` file next to the Markdown file.
 - Relative images are resolved from the input file's directory.
-- Styling comes from `scripts/reference.docx`.
+- Styling comes from `skills/markdown-to-docx/scripts/reference.docx`.
 - The scripts apply one DOCX XML fix after Pandoc runs so Word tables auto-fit better.
 
 ## Customizing The Word Style
 
-Edit `scripts/reference.docx` in Microsoft Word when you want to change:
+Edit `skills/markdown-to-docx/scripts/reference.docx` in Microsoft Word when you want to change:
 
 - heading styles
 - normal paragraph spacing
@@ -194,3 +233,7 @@ Windows:
 - If the shell script says a command is missing on macOS, install the missing tool and rerun the conversion.
 - If PowerShell blocks script execution, rerun `Set-ExecutionPolicy -Scope Process Bypass` in that terminal window.
 - If a Markdown file references images, keep the image paths relative to the Markdown file or use absolute paths.
+
+## License
+
+MIT

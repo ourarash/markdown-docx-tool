@@ -18,11 +18,11 @@
 
 ## Decisions
 
-| Topic | Decision |
-| --- | --- |
-| Default template | Keep `scripts/reference.docx` as the shared style source |
-| Windows workflow | Use the PowerShell script |
-| macOS workflow | Use the shell script |
+| Topic            | Decision                                                                         |
+|------------------|----------------------------------------------------------------------------------|
+| Default template | Keep `skills/markdown-to-docx/scripts/reference.docx` as the shared style source |
+| Windows workflow | Use the PowerShell script                                                        |
+| macOS workflow   | Use the shell script                                                             |
 
 ## Action Items
 

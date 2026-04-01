@@ -1,0 +1,48 @@
+<svg width="1280" height="760" viewBox="0 0 1280 760" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FAFC"/>
+      <stop offset="1" stop-color="#EEF2FF"/>
+    </linearGradient>
+    <filter id="shadow" x="182" y="62" width="916" height="636" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="18"/>
+      <feGaussianBlur stdDeviation="19"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0588235 0 0 0 0 0.0901961 0 0 0 0 0.164706 0 0 0 0.16 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_1" result="shape"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="760" fill="url(#bg)"/>
+  <circle cx="1113" cy="128" r="149" fill="#DBEAFE"/>
+  <circle cx="157" cy="624" r="188" fill="#E0F2FE"/>
+  <g filter="url(#shadow)">
+    <rect x="220" y="82" width="840" height="560" rx="24" fill="white"/>
+    <rect x="220" y="82" width="840" height="48" rx="24" fill="#0F172A"/>
+    <circle cx="256" cy="106" r="6" fill="#FCA5A5"/>
+    <circle cx="278" cy="106" r="6" fill="#FDE68A"/>
+    <circle cx="300" cy="106" r="6" fill="#86EFAC"/>
+
+    <text x="276" y="180" fill="#0F172A" font-size="34" font-family="Arial, Helvetica, sans-serif" font-weight="700">Markdown to DOCX Preview</text>
+    <text x="276" y="214" fill="#475569" font-size="18" font-family="Arial, Helvetica, sans-serif">Bundled reference.docx styling with callout support, tables, and Word-friendly spacing.</text>
+
+    <rect x="276" y="246" width="728" height="92" rx="14" fill="#EFF6FF"/>
+    <rect x="276" y="246" width="10" height="92" rx="5" fill="#2563EB"/>
+    <text x="308" y="279" fill="#1E3A8A" font-size="18" font-family="Arial, Helvetica, sans-serif" font-weight="700">Note</text>
+    <text x="308" y="308" fill="#1F2937" font-size="16" font-family="Arial, Helvetica, sans-serif">Custom paragraph styles travel from Markdown into DOCX when the style exists</text>
+    <text x="308" y="332" fill="#1F2937" font-size="16" font-family="Arial, Helvetica, sans-serif">in the bundled template and the custom-style name matches exactly.</text>
+
+    <rect x="276" y="364" width="728" height="92" rx="14" fill="#FFF7ED"/>
+    <rect x="276" y="364" width="10" height="92" rx="5" fill="#EA580C"/>
+    <text x="308" y="397" fill="#9A3412" font-size="18" font-family="Arial, Helvetica, sans-serif" font-weight="700">Warning</text>
+    <text x="308" y="426" fill="#1F2937" font-size="16" font-family="Arial, Helvetica, sans-serif">Wide tables and images are much easier to review when the generated DOCX uses</text>
+    <text x="308" y="450" fill="#1F2937" font-size="16" font-family="Arial, Helvetica, sans-serif">a consistent Word template and auto-fit table layout.</text>
+
+    <rect x="276" y="482" width="728" height="92" rx="14" fill="#FFF7E8"/>
+    <rect x="276" y="482" width="10" height="92" rx="5" fill="#D97706"/>
+    <text x="308" y="515" fill="#92400E" font-size="18" font-family="Arial, Helvetica, sans-serif" font-weight="700">Risk</text>
+    <text x="308" y="544" fill="#1F2937" font-size="16" font-family="Arial, Helvetica, sans-serif">Keeping the template in the skill package avoids drift and makes Markdown-to-Word</text>
+    <text x="308" y="568" fill="#1F2937" font-size="16" font-family="Arial, Helvetica, sans-serif">output more consistent across machines and team members.</text>
+  </g>
+</svg>

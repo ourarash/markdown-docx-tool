@@ -14,27 +14,34 @@ This skill supports two kinds of work:
 
 ## Quick Start
 
-Use the bundled scripts from this skill directory:
+Use the bundled launcher from this skill directory so installation does not depend on shell execute bits:
 
 macOS/Linux:
 
 ```bash
-./scripts/pandoc_md_to_docx.sh path/to/file.md
-./scripts/pandoc_md_to_docx.sh path/to/file.md path/to/output.docx
+python3 scripts/markdown_to_docx.py path/to/file.md
+python3 scripts/markdown_to_docx.py path/to/file.md path/to/output.docx
 ```
 
 Windows:
 
 ```powershell
-.\scripts\pandoc_md_to_docx.ps1 -InputPath .\path\to\file.md
-.\scripts\pandoc_md_to_docx.ps1 -InputPath .\path\to\file.md -OutputPath .\path\to\output.docx
+py -3 .\scripts\markdown_to_docx.py .\path\to\file.md
+py -3 .\scripts\markdown_to_docx.py .\path\to\file.md .\path\to\output.docx
+```
+
+Fallback on macOS/Linux if needed:
+
+```bash
+bash scripts/pandoc_md_to_docx.sh path/to/file.md
 ```
 
 ## Workflow
 
 1. Detect the operating system and choose:
-   - `scripts/pandoc_md_to_docx.sh` on macOS/Linux
-   - `scripts/pandoc_md_to_docx.ps1` on Windows
+   - `scripts/markdown_to_docx.py` as the preferred launcher
+   - `scripts/pandoc_md_to_docx.sh` on macOS/Linux when direct script invocation is needed
+   - `scripts/pandoc_md_to_docx.ps1` on Windows when direct PowerShell invocation is needed
 2. Verify that `pandoc` is installed before attempting conversion.
 3. If the user did not provide an output path, let the script write `<input>.docx` next to the source Markdown file.
 4. Use the bundled `scripts/reference.docx` as the Word template.

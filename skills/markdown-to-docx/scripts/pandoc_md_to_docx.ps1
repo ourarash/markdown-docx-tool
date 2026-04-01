@@ -4,7 +4,15 @@ param(
   [string]$InputPath,
 
   [Parameter(Mandatory = $false, Position = 1)]
-  [string]$OutputPath
+  [string]$OutputPath,
+
+  [string]$ReferenceDoc,
+
+  [string]$MetadataFile,
+
+  [string]$OutputDir,
+
+  [switch]$TableOfContents
 )
 
 Set-StrictMode -Version Latest
@@ -12,16 +20,19 @@ $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptDir
-$ReferenceDoc = Join-Path $ScriptDir "reference.docx"
+$DefaultReferenceDoc = Join-Path $ScriptDir "reference.docx"
 
 function Show-Usage {
   @"
 Usage:
   .\scripts\pandoc_md_to_docx.ps1 -InputPath <input.md> [-OutputPath <output.docx>]
+  .\scripts\pandoc_md_to_docx.ps1 -InputPath <input.md> -OutputDir <dir> [-TableOfContents]
+  .\scripts\pandoc_md_to_docx.ps1 -InputPath <input.md> -ReferenceDoc <reference.docx> [-MetadataFile <metadata.yaml>]
 
 Examples:
   .\scripts\pandoc_md_to_docx.ps1 -InputPath .\samples\showcase.md
   .\scripts\pandoc_md_to_docx.ps1 -InputPath .\README.md -OutputPath .\output\repo-readme.docx
+  .\scripts\pandoc_md_to_docx.ps1 -InputPath .\samples\showcase.md -OutputDir .\output -TableOfContents
   .\scripts\pandoc_md_to_docx.ps1 -InputPath C:\docs\report.md
 "@ | Write-Host
 }
@@ -65,6 +76,16 @@ function Resolve-OutputPath {
   }
 
   return [System.IO.Path]::GetFullPath((Join-Path (Get-Location) $Candidate))
+}
+
+function Resolve-OptionalExistingPath {
+  param([string]$Candidate)
+
+  if ([string]::IsNullOrWhiteSpace($Candidate)) {
+    return $null
+  }
+
+  return Resolve-ExistingPath $Candidate
 }
 
 function Get-TemporaryDirectory {
@@ -122,8 +143,19 @@ if ($InputPath -in @('-h', '--help', '/?')) {
 
 Require-Command "pandoc"
 
-if (-not (Test-Path -LiteralPath $ReferenceDoc)) {
-  throw "Reference document not found: $ReferenceDoc"
+if ($PSBoundParameters.ContainsKey('OutputPath') -and $PSBoundParameters.ContainsKey('OutputDir')) {
+  throw "Use either -OutputPath or -OutputDir, not both."
+}
+
+$ResolvedReferenceDoc = if ($PSBoundParameters.ContainsKey('ReferenceDoc')) {
+  Resolve-ExistingPath $ReferenceDoc
+}
+else {
+  $DefaultReferenceDoc
+}
+
+if (-not (Test-Path -LiteralPath $ResolvedReferenceDoc)) {
+  throw "Reference document not found: $ResolvedReferenceDoc"
 }
 
 $ResolvedInput = Resolve-ExistingPath $InputPath
@@ -135,9 +167,17 @@ if (-not (Test-Path -LiteralPath $ResolvedInput -PathType Leaf)) {
 if ($PSBoundParameters.ContainsKey('OutputPath')) {
   $ResolvedOutput = Resolve-OutputPath $OutputPath
 }
+elseif ($PSBoundParameters.ContainsKey('OutputDir')) {
+  $ResolvedOutputDir = Resolve-OutputPath $OutputDir
+  $ResolvedOutput = Join-Path $ResolvedOutputDir (
+    "{0}.docx" -f [System.IO.Path]::GetFileNameWithoutExtension($ResolvedInput)
+  )
+}
 else {
   $ResolvedOutput = [System.IO.Path]::ChangeExtension($ResolvedInput, ".docx")
 }
+
+$ResolvedMetadataFile = Resolve-OptionalExistingPath $MetadataFile
 
 $InputDir = Split-Path -Parent $ResolvedInput
 $OutputDir = Split-Path -Parent $ResolvedOutput
@@ -150,19 +190,30 @@ if (-not (Test-Path -LiteralPath $OutputDir)) {
 
 $ResourcePath = "{0};{1}" -f $InputDir, $RepoRoot
 
+$PandocArgs = @(
+  $ResolvedInput,
+  "--from=markdown+smart",
+  "--to=docx",
+  "--wrap=none",
+  "--resource-path=$ResourcePath",
+  "--extract-media=$MediaDir",
+  "--dpi=300",
+  "--reference-doc=$ResolvedReferenceDoc"
+)
+
+if ($TableOfContents.IsPresent) {
+  $PandocArgs += "--toc"
+}
+
+if ($ResolvedMetadataFile) {
+  $PandocArgs += "--metadata-file=$ResolvedMetadataFile"
+}
+
+$PandocArgs += @("-o", $ResolvedOutput)
+
 Push-Location $RepoRoot
 try {
-  & pandoc `
-    $ResolvedInput `
-    "--from=markdown+smart" `
-    "--to=docx" `
-    "--wrap=none" `
-    "--resource-path=$ResourcePath" `
-    "--extract-media=$MediaDir" `
-    "--dpi=300" `
-    "--reference-doc=$ReferenceDoc" `
-    "-o" `
-    $ResolvedOutput
+  & pandoc @PandocArgs
 }
 finally {
   Pop-Location

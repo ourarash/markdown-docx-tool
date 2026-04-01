@@ -23,20 +23,29 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-REFERENCE_DOC="$SCRIPT_DIR/reference.docx"
+DEFAULT_REFERENCE_DOC="$SCRIPT_DIR/reference.docx"
+REFERENCE_DOC="$DEFAULT_REFERENCE_DOC"
+METADATA_FILE=""
+ENABLE_TOC=0
+OUTPUT_DIR=""
 
 usage() {
   cat <<EOF
-Usage: $(basename "$0") <input.md> [output.docx]
+Usage: $(basename "$0") [options] <input.md> [output.docx]
 
 Examples:
   $(basename "$0") samples/showcase.md
   $(basename "$0") README.md /tmp/repo_readme.docx
+  $(basename "$0") --toc --output-dir output samples/showcase.md
   $(basename "$0") /absolute/path/to/file.md
 
 Notes:
   - If output is omitted, the script writes <input-basename>.docx next to the
     markdown file.
+  - Use --output-dir to keep the default filename but write it elsewhere.
+  - Use --reference-doc to override the bundled reference template.
+  - Use --metadata-file to pass a Pandoc metadata file.
+  - Use --toc to include a table of contents.
   - Styling comes from the bundled reference.docx.
   - The script keeps one XML post-processing step to force Word table auto-fit.
 EOF
@@ -127,6 +136,60 @@ if [[ "${1:-}" = "-h" || "${1:-}" = "--help" ]]; then
   exit 0
 fi
 
+POSITIONAL_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --reference-doc)
+      [[ $# -ge 2 ]] || { echo "Error: --reference-doc requires a path" >&2; exit 1; }
+      REFERENCE_DOC="$(resolve_existing_path "$2")" || {
+        echo "Error: reference document not found: $2" >&2
+        exit 1
+      }
+      shift 2
+      ;;
+    --metadata-file)
+      [[ $# -ge 2 ]] || { echo "Error: --metadata-file requires a path" >&2; exit 1; }
+      METADATA_FILE="$(resolve_existing_path "$2")" || {
+        echo "Error: metadata file not found: $2" >&2
+        exit 1
+      }
+      shift 2
+      ;;
+    --output-dir)
+      [[ $# -ge 2 ]] || { echo "Error: --output-dir requires a path" >&2; exit 1; }
+      OUTPUT_DIR="$(resolve_output_path "$2")"
+      shift 2
+      ;;
+    --toc)
+      ENABLE_TOC=1
+      shift
+      ;;
+    --)
+      shift
+      while [[ $# -gt 0 ]]; do
+        POSITIONAL_ARGS+=("$1")
+        shift
+      done
+      ;;
+    -*)
+      echo "Error: unknown option: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+set -- "${POSITIONAL_ARGS[@]}"
+
 if [[ $# -lt 1 || $# -gt 2 ]]; then
   usage >&2
   exit 1
@@ -147,8 +210,15 @@ if [[ ! -f "$INPUT_MD" ]]; then
   exit 1
 fi
 
+if [[ $# -eq 2 && -n "$OUTPUT_DIR" ]]; then
+  echo "Error: use either an explicit output path or --output-dir, not both" >&2
+  exit 1
+fi
+
 if [[ $# -eq 2 ]]; then
   OUTPUT_DOCX="$(resolve_output_path "$2")"
+elif [[ -n "$OUTPUT_DIR" ]]; then
+  OUTPUT_DOCX="$OUTPUT_DIR/$(basename "${INPUT_MD%.*}").docx"
 else
   OUTPUT_DOCX="${INPUT_MD%.*}.docx"
 fi
@@ -160,23 +230,30 @@ MEDIA_DIR="$OUTPUT_DIR/${OUTPUT_BASE}_media"
 
 mkdir -p "$OUTPUT_DIR"
 
-if [[ ! -f "$REFERENCE_DOC" ]]; then
-  echo "Error: reference document not found: $REFERENCE_DOC" >&2
-  exit 1
-fi
-
 cd "$REPO_ROOT"
 
-pandoc \
-  "$INPUT_MD" \
-  --from=markdown+smart \
-  --to=docx \
-  --wrap=none \
-  --resource-path="$INPUT_DIR:$REPO_ROOT" \
-  --extract-media="$MEDIA_DIR" \
-  --dpi=300 \
-  --reference-doc="$REFERENCE_DOC" \
-  -o "$OUTPUT_DOCX"
+PANDOC_ARGS=(
+  "$INPUT_MD"
+  --from=markdown+smart
+  --to=docx
+  --wrap=none
+  "--resource-path=$INPUT_DIR:$REPO_ROOT"
+  "--extract-media=$MEDIA_DIR"
+  --dpi=300
+  "--reference-doc=$REFERENCE_DOC"
+)
+
+if [[ $ENABLE_TOC -eq 1 ]]; then
+  PANDOC_ARGS+=(--toc)
+fi
+
+if [[ -n "$METADATA_FILE" ]]; then
+  PANDOC_ARGS+=("--metadata-file=$METADATA_FILE")
+fi
+
+PANDOC_ARGS+=(-o "$OUTPUT_DOCX")
+
+pandoc "${PANDOC_ARGS[@]}"
 
 autofit_docx_tables "$OUTPUT_DOCX"
 

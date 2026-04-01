@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install conversion dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc perl zip unzip
+
+      - name: Validate reference template styles
+        run: |
+          python3 scripts/validate_reference_docx.py \
+            --reference skills/markdown-to-docx/scripts/reference.docx \
+            --skill-doc skills/markdown-to-docx/SKILL.md \
+            --callout-doc skills/markdown-to-docx/references/callout-styles.md \
+            --list
+
+      - name: Run shell wrapper smoke test
+        run: |
+          ./scripts/pandoc_md_to_docx.sh --toc samples/showcase.md /tmp/showcase-shell.docx
+          test -f /tmp/showcase-shell.docx
+
+      - name: Run Python launcher smoke test
+        run: |
+          cat <<'EOF' > /tmp/metadata.yaml
+          title: CI Markdown to DOCX
+          author: GitHub Actions
+          EOF
+          python3 skills/markdown-to-docx/scripts/markdown_to_docx.py \
+            --metadata-file /tmp/metadata.yaml \
+            --output-dir /tmp/skill-output \
+            samples/meeting-notes.md
+          test -f /tmp/skill-output/meeting-notes.docx
+
+      - name: Verify installed skill flow
+        run: |
+          python3 scripts/verify_installed_skill.py \
+            --skill-src skills/markdown-to-docx \
+            --input samples/showcase.md \
+            --output /tmp/installed-skill/showcase-installed.docx \
+            --toc
+
+  windows-smoke:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Pandoc
+        shell: powershell
+        run: choco install pandoc --yes --no-progress
+
+      - name: Validate reference template styles
+        shell: powershell
+        run: |
+          py -3 .\scripts\validate_reference_docx.py `
+            --reference .\skills\markdown-to-docx\scripts\reference.docx `
+            --skill-doc .\skills\markdown-to-docx\SKILL.md `
+            --callout-doc .\skills\markdown-to-docx\references\callout-styles.md
+
+      - name: Run PowerShell wrapper smoke test
+        shell: powershell
+        run: |
+          @"
+          title: Windows CI Markdown to DOCX
+          reviewer: GitHub Actions
+          "@ | Set-Content -Encoding utf8 $env:TEMP\metadata.yaml
+          .\scripts\pandoc_md_to_docx.ps1 `
+            -InputPath .\samples\meeting-notes.md `
+            -MetadataFile $env:TEMP\metadata.yaml `
+            -OutputDir $env:TEMP\wrapper-output `
+            -TableOfContents
+          if (-not (Test-Path $env:TEMP\wrapper-output\meeting-notes.docx)) {
+            throw "PowerShell wrapper did not produce meeting-notes.docx"
+          }
+
+      - name: Run Python launcher smoke test
+        shell: powershell
+        run: |
+          py -3 .\skills\markdown-to-docx\scripts\markdown_to_docx.py `
+            --toc `
+            .\samples\showcase.md `
+            $env:TEMP\showcase-launcher.docx
+          if (-not (Test-Path $env:TEMP\showcase-launcher.docx)) {
+            throw "Python launcher did not produce showcase-launcher.docx"
+          }
+
+      - name: Verify installed skill flow
+        shell: powershell
+        run: |
+          py -3 .\scripts\verify_installed_skill.py `
+            --skill-src .\skills\markdown-to-docx `
+            --input .\samples\showcase.md `
+            --output $env:TEMP\installed-skill\showcase-installed.docx `
+            --toc

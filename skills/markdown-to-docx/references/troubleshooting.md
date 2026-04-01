@@ -17,6 +17,19 @@ The shell script also expects:
 
 Install any missing tool and rerun the command.
 
+## Shell Script Is Not Executable After Skill Install
+
+Some installation paths may not preserve the shell script's executable bit.
+
+Use the Python launcher instead:
+
+- macOS/Linux: `python3 scripts/markdown_to_docx.py path/to/file.md`
+- Windows: `py -3 .\scripts\markdown_to_docx.py .\path\to\file.md`
+
+Fallback on macOS/Linux:
+
+- `bash scripts/pandoc_md_to_docx.sh path/to/file.md`
+
 ## Callout Does Not Style Correctly
 
 If a `custom-style` block converts but looks like normal body text in Word:

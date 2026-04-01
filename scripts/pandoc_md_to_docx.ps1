@@ -6,6 +6,14 @@ param(
   [Parameter(Mandatory = $false, Position = 1)]
   [string]$OutputPath,
 
+  [string]$ReferenceDoc,
+
+  [string]$MetadataFile,
+
+  [string]$OutputDir,
+
+  [switch]$TableOfContents,
+
   [Alias("h")]
   [switch]$Help
 )
@@ -33,6 +41,22 @@ if ($PSBoundParameters.ContainsKey("InputPath")) {
 
 if ($PSBoundParameters.ContainsKey("OutputPath")) {
   $ForwardArgs += @("-OutputPath", $OutputPath)
+}
+
+if ($PSBoundParameters.ContainsKey("ReferenceDoc")) {
+  $ForwardArgs += @("-ReferenceDoc", $ReferenceDoc)
+}
+
+if ($PSBoundParameters.ContainsKey("MetadataFile")) {
+  $ForwardArgs += @("-MetadataFile", $MetadataFile)
+}
+
+if ($PSBoundParameters.ContainsKey("OutputDir")) {
+  $ForwardArgs += @("-OutputDir", $OutputDir)
+}
+
+if ($TableOfContents.IsPresent) {
+  $ForwardArgs += "-TableOfContents"
 }
 
 & $ResolvedTarget @ForwardArgs

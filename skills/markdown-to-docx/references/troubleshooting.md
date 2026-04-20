@@ -7,6 +7,16 @@ If the script cannot find `pandoc`, install it first and rerun the conversion.
 - macOS: `brew install pandoc`
 - Windows: install Pandoc and make sure it is on `PATH`
 
+## Mermaid Diagrams Do Not Render
+
+Mermaid fenced blocks need Mermaid CLI so the wrapper can turn them into images before Pandoc writes the DOCX.
+
+- Install it with `npm install -g @mermaid-js/mermaid-cli`
+- If the executable is not on `PATH`, set `MERMAID_MMDC` to the full executable path
+- Use `MARKDOWN_DOCX_MERMAID_SCALE=2` or higher if the PNG output looks soft in Word
+- If diagrams look too large in Word, lower `MARKDOWN_DOCX_MERMAID_WIDTH` or set `width=...` on the individual Mermaid block
+- If Chrome fails to launch in a sandboxed environment, set `MARKDOWN_DOCX_MERMAID_PUPPETEER_CONFIG` to a Puppeteer config file such as `scripts/puppeteer-no-sandbox.json`
+
 ## Missing Helper Tools On macOS/Linux
 
 The shell script also expects:

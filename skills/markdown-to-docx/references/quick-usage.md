@@ -28,5 +28,9 @@ bash scripts/pandoc_md_to_docx.sh path/to/file.md
 - If output is omitted, the script writes a `.docx` file next to the Markdown file.
 - Relative images are resolved from the input file's directory.
 - Styling comes from the bundled `scripts/reference.docx`.
+- Mermaid fenced code blocks are rendered to images when `mmdc` is available.
+- Mermaid diagrams are centered by default in the generated DOCX.
+- Mermaid diagrams get automatic captions in the generated DOCX.
+- Mermaid diagrams default to `5.5in` wide unless a block-level `width` attribute overrides that.
 - The scripts apply one DOCX XML fix after Pandoc runs so Word tables auto-fit better.
 - The Python launcher avoids relying on the shell script's executable bit after skill installation.

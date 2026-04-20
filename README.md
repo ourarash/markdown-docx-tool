@@ -15,6 +15,7 @@ Requirements:
 
 - `pandoc` on every platform
 - `perl`, `zip`, and `unzip` on macOS/Linux
+- `mmdc` from `@mermaid-js/mermaid-cli` if you want Mermaid diagrams rendered into DOCX
 - Python only if you want to use the installed skill launcher directly
 
 Run a sample conversion from the repo root:
@@ -56,6 +57,65 @@ Windows:
 .\scripts\pandoc_md_to_docx.ps1 -InputPath .\samples\showcase.md -OutputDir .\output -TableOfContents
 ```
 
+## Mermaid Diagrams
+
+If your Markdown includes fenced Mermaid blocks such as:
+
+````markdown
+```mermaid
+flowchart TD
+  A[Markdown] --> B[DOCX]
+```
+````
+
+the wrappers now render them into image files before Pandoc writes the DOCX. Install Mermaid CLI first.
+
+macOS:
+
+```bash
+brew install mermaid-cli
+```
+
+or:
+
+```bash
+npm install -g @mermaid-js/mermaid-cli
+```
+
+Windows PowerShell:
+
+```powershell
+npm install -g @mermaid-js/mermaid-cli
+```
+
+Mermaid CLI also needs a browser runtime. If `mmdc` reports that Chrome or `chrome-headless-shell` is missing, install that runtime before converting Mermaid diagrams. One common option is:
+
+```bash
+npx puppeteer browsers install chrome-headless-shell
+```
+
+If you are running in a sandboxed or locked-down environment and Chrome needs extra launch flags, point the converter at a Puppeteer config file.
+
+By default the tool emits PNG diagrams into `<output>_media/mermaid/`, centers them in Word, and adds automatic captions such as `Figure 1. Flowchart`. You can tune the renderer with environment variables:
+
+- Mermaid diagrams are centered by default in DOCX output
+- `MARKDOWN_DOCX_MERMAID_FORMAT=png` or `svg`
+- `MARKDOWN_DOCX_MERMAID_SCALE=2` to increase PNG resolution
+- `MARKDOWN_DOCX_MERMAID_WIDTH=5.5in` to set the default embedded width in DOCX
+- `MERMAID_MMDC=/absolute/path/to/mmdc` if the executable is not on `PATH`
+- `MARKDOWN_DOCX_MERMAID_PUPPETEER_CONFIG=/path/to/puppeteer.json` if Chrome needs extra launch args such as `--no-sandbox`
+
+You can also size an individual Mermaid block directly in Markdown with Pandoc attributes:
+
+````markdown
+```{.mermaid width=4.75in}
+flowchart TD
+  A[Draft] --> B[Review]
+```
+````
+
+See `samples/mermaid.md` for a ready-to-convert example.
+
 ## Codex Skill
 
 This repo also ships a self-contained Codex skill at `skills/markdown-to-docx`.
@@ -94,6 +154,7 @@ The sample files under `samples/` are good starting points for testing template 
 
 - `samples/showcase.md` covers headings, lists, tables, code blocks, footnotes, and callout styles
 - `samples/meeting-notes.md` is a smaller notes-style example
+- `samples/mermaid.md` shows Mermaid diagrams being rendered as images for DOCX output
 
 ## Development Checks
 

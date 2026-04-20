@@ -7,6 +7,8 @@ description: Use when the user wants to convert Markdown to DOCX, make a Microso
 
 Converts Markdown files into Microsoft Word documents with Pandoc, a bundled Word reference template, and one post-processing fix that makes wide tables auto-fit more naturally in Word.
 
+When the source Markdown contains Mermaid fenced code blocks, the bundled wrappers also render them to images with Mermaid CLI before Pandoc writes the DOCX.
+
 This skill supports two kinds of work:
 
 - convert Markdown to DOCX with the bundled scripts
@@ -47,6 +49,7 @@ bash scripts/pandoc_md_to_docx.sh path/to/file.md
 4. Use the bundled `scripts/reference.docx` as the Word template.
 5. If the user wants callouts or special formatting, confirm that the corresponding custom style exists in the template.
 6. If the user wants the callout look or typography changed, edit `scripts/reference.docx` rather than trying to fake the styling in Markdown.
+7. If the Markdown contains Mermaid code fences, make sure `mmdc` from `@mermaid-js/mermaid-cli` is installed or available through `MERMAID_MMDC`.
 
 ## Callout Guidance
 
@@ -74,6 +77,7 @@ When the user asks to add or fix callouts:
 
 - `pandoc` is required on every platform
 - macOS/Linux also need `perl`, `zip`, and `unzip`
+- Mermaid diagrams require `mmdc` from `@mermaid-js/mermaid-cli`
 - Windows relies on built-in PowerShell archive commands
 
 ## References

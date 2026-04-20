@@ -13,6 +13,7 @@ set -euo pipefail
 #   images and other linked assets resolve the same way they do in markdown.
 # - Reuses the bundled `reference.docx` for Word-native styling. That file is
 #   the preferred place to manage code, table, and other visual formatting.
+# - Renders Mermaid code blocks to images with Mermaid CLI when present.
 # - Applies one post-processing fix after Pandoc runs: switch Word tables from
 #   fixed layout to auto-fit so wide markdown tables render more naturally.
 #
@@ -47,6 +48,7 @@ Notes:
   - Use --metadata-file to pass a Pandoc metadata file.
   - Use --toc to include a table of contents.
   - Styling comes from the bundled reference.docx.
+  - Mermaid code blocks require Mermaid CLI (`mmdc`) on PATH.
   - The script keeps one XML post-processing step to force Word table auto-fit.
 EOF
 }
@@ -122,6 +124,50 @@ autofit_docx_tables() {
   # Word's auto-fit width behavior.
   perl -0pi -e 's#<w:tblLayout w:type="fixed"\s*/>##g; s#<w:tblW w:type="pct" w:w="5000"\s*/>#<w:tblW w:type="auto" w:w="0"/>#g' \
     "$tmp_dir/word/document.xml"
+
+  (
+    cd "$tmp_dir"
+    zip -X -qr "$docx_path" .
+  )
+
+  rm -rf "$tmp_dir"
+}
+
+center_mermaid_images() {
+  local docx_path="$1"
+  local tmp_dir
+
+  tmp_dir="$(mktemp -d)"
+  unzip -qq "$docx_path" -d "$tmp_dir"
+
+  # Mermaid diagrams are rendered as inline images inside normal paragraphs.
+  # Center only Mermaid image paragraphs and their generated caption paragraphs
+  # so other images and body text keep their existing alignment.
+  perl -0pi -e 's{(<w:p\b[^>]*>(?:(?!</w:p>).)*?<wp:docPr\b[^>]*descr="Mermaid diagram"[^>]*/>(?:(?!</w:p>).)*?</w:p>)}{
+    my $p = $1;
+    if ($p =~ /<w:pPr>/) {
+      $p =~ s{<w:pPr>(?!.*?<w:jc\b)}{<w:pPr><w:jc w:val="center"/>}s;
+      $p =~ s{<w:pPr>(?!.*?<w:keepNext\b)}{<w:pPr><w:keepNext/>}s;
+    } else {
+      $p =~ s{<w:p\b[^>]*>}{<w:p><w:pPr><w:keepNext/><w:jc w:val="center"/></w:pPr>}s;
+    }
+    $p;
+  }gse' "$tmp_dir/word/document.xml"
+
+  perl -0pi -e 's{(<w:p\b[^>]*>(?:(?!</w:p>).)*?<wp:docPr\b[^>]*descr="Mermaid diagram"[^>]*/>(?:(?!</w:p>).)*?</w:p>)(\s*)(<w:p\b[^>]*>(?:(?!</w:p>).)*?<w:t\b[^>]*>Figure \d+\..*?</w:p>)}{
+    my ($image_p, $spacing, $caption_p) = ($1, $2, $3);
+    if ($caption_p =~ /<w:pPr>/) {
+      if ($caption_p =~ /<w:pStyle\b/) {
+        $caption_p =~ s{<w:pStyle\b[^>]*/>}{<w:pStyle w:val="ImageCaption"/>}s;
+      } else {
+        $caption_p =~ s{<w:pPr>}{<w:pPr><w:pStyle w:val="ImageCaption"/>}s;
+      }
+      $caption_p =~ s{<w:pPr>(?!.*?<w:jc\b)}{<w:pPr><w:jc w:val="center"/>}s;
+    } else {
+      $caption_p =~ s{<w:p\b[^>]*>}{<w:p><w:pPr><w:jc w:val="center"/><w:pStyle w:val="ImageCaption"/></w:pPr>}s;
+    }
+    $image_p . $spacing . $caption_p;
+  }gse' "$tmp_dir/word/document.xml"
 
   (
     cd "$tmp_dir"
@@ -227,10 +273,15 @@ INPUT_DIR="$(dirname "$INPUT_MD")"
 OUTPUT_DIR="$(dirname "$OUTPUT_DOCX")"
 OUTPUT_BASE="$(basename "${OUTPUT_DOCX%.*}")"
 MEDIA_DIR="$OUTPUT_DIR/${OUTPUT_BASE}_media"
+MERMAID_DIR="$MEDIA_DIR/mermaid"
 
 mkdir -p "$OUTPUT_DIR"
 
 cd "$REPO_ROOT"
+
+export MARKDOWN_DOCX_MERMAID_DIR="$MERMAID_DIR"
+export MARKDOWN_DOCX_MERMAID_FORMAT="${MARKDOWN_DOCX_MERMAID_FORMAT:-png}"
+export MARKDOWN_DOCX_MERMAID_SCALE="${MARKDOWN_DOCX_MERMAID_SCALE:-2}"
 
 PANDOC_ARGS=(
   "$INPUT_MD"
@@ -240,6 +291,7 @@ PANDOC_ARGS=(
   "--resource-path=$INPUT_DIR:$REPO_ROOT"
   "--extract-media=$MEDIA_DIR"
   --dpi=300
+  "--lua-filter=$SCRIPT_DIR/mermaid_filter.lua"
   "--reference-doc=$REFERENCE_DOC"
 )
 
@@ -256,5 +308,6 @@ PANDOC_ARGS+=(-o "$OUTPUT_DOCX")
 pandoc "${PANDOC_ARGS[@]}"
 
 autofit_docx_tables "$OUTPUT_DOCX"
+center_mermaid_images "$OUTPUT_DOCX"
 
 echo "Wrote: $OUTPUT_DOCX"

@@ -64,6 +64,8 @@ def main() -> int:
         expected_files = [
             install_dir / "SKILL.md",
             install_dir / "scripts" / "markdown_to_docx.py",
+            install_dir / "scripts" / "mermaid_filter.lua",
+            install_dir / "scripts" / "puppeteer-no-sandbox.json",
             install_dir / "scripts" / "reference.docx",
         ]
         missing = [str(path) for path in expected_files if not path.exists()]

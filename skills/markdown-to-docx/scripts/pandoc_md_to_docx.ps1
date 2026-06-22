@@ -118,6 +118,58 @@ function AutoFit-DocxTables {
     $Content = [System.IO.File]::ReadAllText($DocumentXml)
     $Content = $Content.Replace('<w:tblLayout w:type="fixed"/>', '')
     $Content = $Content.Replace('<w:tblW w:type="pct" w:w="5000"/>', '<w:tblW w:type="auto" w:w="0"/>')
+    $Content = [regex]::Replace(
+      $Content,
+      '(</w:tbl>\s*<w:p\b[^>]*>)(?:(<w:pPr\b[^>]*>(?:(?!</w:pPr>).)*?</w:pPr>))?',
+      {
+        param($Match)
+
+        $OpenParagraph = $Match.Groups[1].Value
+        $ParagraphProperties = $Match.Groups[2].Value
+        $Spacing = '<w:spacing w:before="160"/>'
+
+        if (-not [string]::IsNullOrEmpty($ParagraphProperties)) {
+          if ($ParagraphProperties -match '<w:spacing\b') {
+            $ParagraphProperties = [regex]::Replace(
+              $ParagraphProperties,
+              '<w:spacing\b([^>]*)/>',
+              {
+                param($SpacingMatch)
+
+                $Attributes = $SpacingMatch.Groups[1].Value -replace '\s+w:before="[^"]*"', ''
+                return '<w:spacing{0} w:before="160"/>' -f $Attributes
+              },
+              [System.Text.RegularExpressions.RegexOptions]::Singleline
+            )
+          }
+          else {
+            $ParagraphProperties = [regex]::Replace(
+              $ParagraphProperties,
+              '<w:pPr\b[^>]*>',
+              '$0' + $Spacing,
+              [System.Text.RegularExpressions.RegexOptions]::Singleline
+            )
+          }
+
+          return $OpenParagraph + $ParagraphProperties
+        }
+
+        return $OpenParagraph + '<w:pPr>' + $Spacing + '</w:pPr>'
+      },
+      [System.Text.RegularExpressions.RegexOptions]::Singleline
+    )
+    $Content = [regex]::Replace(
+      $Content,
+      '<w:bookmarkStart\b[^>]*/>\s*',
+      '',
+      [System.Text.RegularExpressions.RegexOptions]::Singleline
+    )
+    $Content = [regex]::Replace(
+      $Content,
+      '\s*<w:bookmarkEnd\b[^>]*/>',
+      '',
+      [System.Text.RegularExpressions.RegexOptions]::Singleline
+    )
     [System.IO.File]::WriteAllText($DocumentXml, $Content)
 
     if (Test-Path -LiteralPath $OutputZipPath) {

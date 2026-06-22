@@ -32,5 +32,5 @@ bash scripts/pandoc_md_to_docx.sh path/to/file.md
 - Mermaid diagrams are centered by default in the generated DOCX.
 - Mermaid diagrams get automatic captions in the generated DOCX.
 - Mermaid diagrams default to `5.5in` wide unless a block-level `width` attribute overrides that.
-- The scripts apply one DOCX XML fix after Pandoc runs so Word tables auto-fit better.
+- The scripts apply DOCX XML cleanup after Pandoc runs so Word tables auto-fit better, paragraphs after tables have clearer spacing, and generated heading bookmarks are removed.
 - The Python launcher avoids relying on the shell script's executable bit after skill installation.

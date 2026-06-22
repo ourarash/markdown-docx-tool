@@ -3,7 +3,7 @@
 [![CI](https://github.com/ourarash/markdown-docx-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/ourarash/markdown-docx-tool/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ourarash/markdown-docx-tool/blob/main/LICENSE)
 
-`markdown-to-docx` is a small Pandoc wrapper for turning Markdown files into Microsoft Word documents with a bundled `reference.docx`, cross-platform helper scripts, and one post-processing fix so wide tables auto-fit better in Word.
+`markdown-to-docx` is a small Pandoc wrapper for turning Markdown files into Microsoft Word documents with a bundled `reference.docx`, cross-platform helper scripts, and DOCX post-processing so wide tables auto-fit better in Word, tables have clearer spacing, and generated heading bookmarks do not clutter the Word bookmark list.
 
 ## Preview
 

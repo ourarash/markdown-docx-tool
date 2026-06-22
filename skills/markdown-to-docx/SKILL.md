@@ -5,7 +5,7 @@ description: Use when the user wants to convert Markdown to DOCX, make a Microso
 
 # Markdown to DOCX
 
-Converts Markdown files into Microsoft Word documents with Pandoc, a bundled Word reference template, and one post-processing fix that makes wide tables auto-fit more naturally in Word.
+Converts Markdown files into Microsoft Word documents with Pandoc, a bundled Word reference template, and DOCX post-processing that makes wide tables auto-fit more naturally in Word, adds clearer spacing after tables, and removes generated heading bookmarks.
 
 When the source Markdown contains Mermaid fenced code blocks, the bundled wrappers also render them to images with Mermaid CLI before Pandoc writes the DOCX.
 

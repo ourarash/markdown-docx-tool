@@ -14,8 +14,9 @@ set -euo pipefail
 # - Reuses the bundled `reference.docx` for Word-native styling. That file is
 #   the preferred place to manage code, table, and other visual formatting.
 # - Renders Mermaid code blocks to images with Mermaid CLI when present.
-# - Applies one post-processing fix after Pandoc runs: switch Word tables from
-#   fixed layout to auto-fit so wide markdown tables render more naturally.
+# - Applies DOCX post-processing fixes after Pandoc runs: switch Word tables
+#   from fixed layout to auto-fit, add breathing room after tables, and remove
+#   generated heading bookmarks that clutter Word's bookmark list.
 #
 # Example usage:
 #   ./scripts/pandoc_md_to_docx.sh samples/showcase.md
@@ -49,7 +50,8 @@ Notes:
   - Use --toc to include a table of contents.
   - Styling comes from the bundled reference.docx.
   - Mermaid code blocks require Mermaid CLI (`mmdc`) on PATH.
-  - The script keeps one XML post-processing step to force Word table auto-fit.
+  - The script keeps XML post-processing steps for Word table layout cleanup
+    and generated heading bookmark cleanup.
 EOF
 }
 
@@ -122,7 +124,40 @@ autofit_docx_tables() {
   # tables that is fine, but for wide task/status tables it tends to produce
   # cramped columns in Word. Remove the fixed-layout marker and restore
   # Word's auto-fit width behavior.
-  perl -0pi -e 's#<w:tblLayout w:type="fixed"\s*/>##g; s#<w:tblW w:type="pct" w:w="5000"\s*/>#<w:tblW w:type="auto" w:w="0"/>#g' \
+  #
+  # Word tables also do not honor paragraph spacing the same way normal
+  # paragraphs do, so add a small amount of spacing before the paragraph that
+  # immediately follows each table.
+  #
+  # Pandoc creates bookmarks for Markdown heading identifiers. Those bookmarks
+  # can clutter Word's bookmark list, so remove generated bookmarks from the
+  # main document XML. Reports produced by this tool do not rely on internal
+  # Word bookmarks.
+  perl -0pi -e '
+    s#<w:tblLayout w:type="fixed"\s*/>##g;
+    s#<w:tblW w:type="pct" w:w="5000"\s*/>#<w:tblW w:type="auto" w:w="0"/>#g;
+    s{(</w:tbl>\s*<w:p\b[^>]*>)(?:(<w:pPr\b[^>]*>(?:(?!</w:pPr>).)*?</w:pPr>))?}{
+      my ($open, $ppr) = ($1, $2);
+      my $spacing = q{<w:spacing w:before="160"/>};
+
+      if (defined $ppr) {
+        if ($ppr =~ /<w:spacing\b/) {
+          $ppr =~ s{<w:spacing\b([^>]*)/>}{
+            my $attrs = $1;
+            $attrs =~ s/\s+w:before="[^"]*"//g;
+            qq{<w:spacing$attrs w:before="160"/>};
+          }e;
+        } else {
+          $ppr =~ s{<w:pPr\b[^>]*>}{$&$spacing};
+        }
+        $open . $ppr;
+      } else {
+        $open . q{<w:pPr>} . $spacing . q{</w:pPr>};
+      }
+    }gse;
+    s#<w:bookmarkStart\b[^>]*/>\s*##g;
+    s#\s*<w:bookmarkEnd\b[^>]*/>##g;
+  ' \
     "$tmp_dir/word/document.xml"
 
   (
